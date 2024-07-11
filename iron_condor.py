@@ -88,3 +88,53 @@ for strike in new_stike_list:
         all_option_contract[p[0].localSymbol]=p[0]
 
 print(all_option_contract)
+
+
+
+df=pd.DataFrame(columns=['name','times','price','oi','volume','iv','delta','gamma','vega','theta','cont_right'])
+df['name']=all_option_contract.keys()
+df.set_index('name',inplace=True)
+print(df)
+
+
+import xlwings as xw
+wb = xw.Book('Data.xlsx')
+sheet = wb.sheets['Sheet1']
+
+def pending_tick_handler(t):
+    t=list(t)[0]
+    times=t.time.replace(tzinfo=dt.timezone.utc).astimezone(tz=None)
+    name=t.contract.localSymbol 
+    price=t.last if t.last else 0
+    volume=t.volume if t.volume else 0
+    cont_right=t.contract.right
+    oi=t.callOpenInterest+t.putOpenInterest if t.callOpenInterest+t.putOpenInterest else 0
+
+    if t.modelGreeks:
+        iv=t.modelGreeks.impliedVol if t.modelGreeks.impliedVol else 0
+        delta=t.modelGreeks.delta if t.modelGreeks.delta else 0  
+        gamma=t.modelGreeks.gamma if t.modelGreeks.gamma else 0
+        vega=t.modelGreeks.vega if t.modelGreeks.vega else 0
+        theta=t.modelGreeks.theta if t.modelGreeks.theta else 0
+        
+    else:
+         iv,delta,gamma,vega,theta=(0,0,0,0,0)
+
+    l=[times,price,oi,volume,iv,delta,gamma,vega,theta,cont_right]
+
+    if name:
+            #updating dataframe
+            df.loc[name] = l
+            print(df)
+
+
+
+
+
+for i,j  in all_option_contract.items():
+    cont=j
+    print(cont)
+    ib.reqMktData(cont, "100, 101, 104", False, False)
+    ib.sleep(2)  
+    ib.reqMarketDataType(1)
+    ib.pendingTickersEvent += pending_tick_handler
