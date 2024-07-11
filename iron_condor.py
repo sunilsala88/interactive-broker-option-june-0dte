@@ -86,3 +86,5 @@ for strike in new_stike_list:
         all_option_contract[c[0].localSymbol]=c[0]
     if p:
         all_option_contract[p[0].localSymbol]=p[0]
+
+print(all_option_contract)
