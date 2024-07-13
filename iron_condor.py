@@ -125,7 +125,7 @@ def pending_tick_handler(t):
     if name:
             #updating dataframe
             df.loc[name] = l
-            print(df)
+            # print(df)
 
 
 
@@ -138,3 +138,20 @@ for i,j  in all_option_contract.items():
     ib.sleep(2)  
     ib.reqMarketDataType(1)
     ib.pendingTickersEvent += pending_tick_handler
+
+
+
+
+async def main():
+    global shortlist_option
+    global first_trade_flag
+
+    while True:
+
+        await asyncio.sleep(1)
+        sheet['A2'].value = df
+        print(df)
+        print(dt.datetime.now())
+
+
+ib.run(main())
