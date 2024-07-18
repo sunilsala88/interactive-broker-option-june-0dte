@@ -414,8 +414,6 @@ async def main():
                 store(shortlist_option)
    
                 
-
-
         if first_trade_flag==4:
             print('first flag is 4')
             print(shortlist_option)
@@ -430,6 +428,12 @@ async def main():
 
 
 ib.run(main())
+
+
+
+
+
+
 
 
 

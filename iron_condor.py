@@ -140,6 +140,24 @@ for i,j  in all_option_contract.items():
     ib.pendingTickersEvent += pending_tick_handler
 
 
+async def get_nearest_cent_option(df,cent,right):
+    df1=df[df['cont_right']==right]
+    option_name=(df1['price'] - cent).abs().idxmin()
+    return option_name
+
+def buy_condor(shortlist_option):
+    for name,data in shortlist_option.items() :   
+        if name.startswith("short"):
+            direction='SELL'
+        else:
+            direction='BUY'
+        contract_object=data['contract']
+        order_object=MarketOrder(direction,quantity)
+        pd1=ib.placeOrder(contract_object,order_object)
+        shortlist_option[name]['order_placed']=True   
+        # updat_order_csv(contract_object.localSymbol,df.loc[contract_object.localSymbol,'price'],direction,'MKT',0) 
+    return shortlist_option
+
 
 
 async def main():
@@ -152,6 +170,51 @@ async def main():
         sheet['A2'].value = df
         print(df)
         print(dt.datetime.now())
+
+        if first_trade_flag==0 and dt.datetime.now()>dt.datetime(current_time.year,current_time.month,current_time.day,start_hour,start_min):
+            print('taking trade')
+            
+
+            short_call_option=await get_nearest_cent_option(df,short_price,'C')
+            
+            shortlist_option['short_call_option']={'name':short_call_option,'contract':all_option_contract[short_call_option],'buy_price':df.loc[short_call_option,'price']}
+
+            short_put_option=await get_nearest_cent_option(df,short_price,'P')
+            shortlist_option['short_put_option']={'name':short_put_option,'contract':all_option_contract[short_put_option],'buy_price':df.loc[short_put_option,'price']}
+
+            long_call_option=await get_nearest_cent_option(df,long_price,'C')
+            shortlist_option['long_call_option']={'name':long_call_option,'contract':all_option_contract[long_call_option],'buy_price':df.loc[long_call_option,'price']}
+
+            long_put_option=await get_nearest_cent_option(df,long_price,'P')
+            shortlist_option['long_put_option']={'name':long_put_option,'contract':all_option_contract[long_put_option],'buy_price':df.loc[long_put_option,'price']}
+
+
+            print('short_call_option',short_call_option,df.loc[short_call_option,'price'])
+            print('short_put_option',short_put_option,df.loc[short_put_option,'price'])
+            print("long_call_option",long_call_option,df.loc[long_call_option,'price'])
+            print("long_put_option",long_put_option,df.loc[long_put_option,'price'])
+
+            first_trade_flag=1
+            shortlist_option=buy_condor(shortlist_option)
+            shortlist_option['first_trade_flag']=1
+            # store(shortlist_option)
+
+
+        if first_trade_flag==1:
+            #check if placed order price doubled
+            print('order placed')
+            # print(shortlist_option) 
+            # if shortlist_option['short_call_option'].get('buy_price')*2<df.loc[shortlist_option['short_call_option'].get('name'),'price']:
+            #     shortlist_option=await manage_iron_condor(shortlist_option,'short_put_option',shortlist_option['short_call_option'].get('buy_price')*2)
+            #     first_trade_flag=2
+            #     shortlist_option['first_trade_flag']=2
+            #     store(shortlist_option)
+            # if shortlist_option['short_put_option'].get('buy_price')*2<df.loc[shortlist_option['short_put_option'].get('name'),'price']:
+            #     shortlist_option=await manage_iron_condor(shortlist_option,'short_call_option',shortlist_option['short_put_option'].get('buy_price')*2)
+            #     first_trade_flag=2
+            #     shortlist_option['first_trade_flag']=2
+            #     store(shortlist_option)
+
 
 
 ib.run(main())
