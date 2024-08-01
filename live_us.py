@@ -44,9 +44,11 @@ except:
     order_filled_dataframe.set_index('time',inplace=True)
 
 def store(data):
-    pickle.dump(data,open('data.pickle','wb'))
+    pickle.dump(data,open(f'data{dt.date.today()}.pickle','wb'))
+
 def load():
-    return pickle.load(open('data.pickle', 'rb'))
+    return pickle.load(open(f'data{dt.date.today()}.pickle', 'rb'))
+
 def updat_order_csv(name,price,action,type1,stop_price):
     global order_filled_dataframe
     a=[name,price,action,type1,stop_price]
@@ -263,6 +265,8 @@ async def manage_iron_condor(shortlist_option,option_leg,new_price):
         print(pd1)
 
     return shortlist_option
+
+
 
 async def change_stop_order_price(shortlist_option,option_type):
 
